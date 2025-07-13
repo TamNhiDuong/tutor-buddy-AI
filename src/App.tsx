@@ -1,35 +1,77 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from "react";
+import "./App.css";
+import { generateQuestion, evaluateAnswer } from "./api";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [topic, setTopic] = useState("Math");
+  const [question, setQuestion] = useState("");
+  const [options, setOptions] = useState<string[]>([]);
+  const [userAnswer, setUserAnswer] = useState("");
+  const [feedback, setFeedback] = useState("");
+
+  const fetchQuestion = async () => {
+    const { q, choices } = await generateQuestion(topic);
+    setQuestion(q);
+    setOptions(choices);
+    setUserAnswer("");
+    setFeedback("");
+  };
+
+  const checkAnswer = async () => {
+    const response = await evaluateAnswer(question, userAnswer);
+    setFeedback(response);
+  };
 
   return (
-    <>
+    <div className="app">
+      <h1>TutorBuddyAI</h1>
+
       <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+        <label>
+          Topic:
+          <select value={topic} onChange={(e) => setTopic(e.target.value)}>
+            <option value="Math">Math</option>
+            <option value="History">History</option>
+            <option value="Science">Science</option>
+          </select>
+        </label>
+        <button onClick={fetchQuestion}>Start</button>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+
+      {question && (
+        <div className="question-box">
+          <p>{question}</p>
+          <ul>
+            {options.map((opt, i) => (
+              <li key={i}>
+                <label>
+                  <input
+                    type="radio"
+                    name="answer"
+                    value={opt}
+                    checked={userAnswer === opt}
+                    onChange={(e) => setUserAnswer(e.target.value)}
+                  />
+                  {opt}
+                </label>
+              </li>
+            ))}
+          </ul>
+          <button onClick={checkAnswer} disabled={!userAnswer}>
+            Submit Answer
+          </button>
+        </div>
+      )}
+
+      {feedback && (
+        <div className="feedback-box">
+          <h3>Feedback</h3>
+          <p>{feedback}</p>
+          <button onClick={fetchQuestion}>Next Question</button>
+        </div>
+      )}
+    </div>
+  );
 }
 
-export default App
+export default App;
